@@ -1,0 +1,7 @@
+import { SiteFooter } from "@/components/site-footer";
+import { SiteHeader } from "@/components/site-header";
+import { memberGroups, type Locale } from "@/lib/site-data";
+
+export function MembersPage({ locale }: { locale: Locale }) {
+  return <><SiteHeader locale={locale} page="members" /><main><section className="members-hero"><div className="container"><p className="eyebrow">1st Generation</p><h1>{locale === "ko" ? "1기 Members" : "1st Generation Members"}</h1><p>{locale === "ko" ? "SNU SemiCon의 첫 출발을 함께한 Members" : "The members who shaped the beginning of SNU SemiCon"}</p></div></section><section className="section members-directory"><div className="container">{memberGroups.map((group) => <section className={`member-group ${group.key === "past" ? "member-group--past" : ""}`} key={group.key}><p className="eyebrow">{group.label}</p><h2>{group.title[locale]}</h2>{group.key === "past" && <p>{locale === "ko" ? "SSC의 시작을 함께해준 소중한 Members" : "Members who were part of SSC’s beginning"}</p>}<div className="member-grid">{group.members.map(([name, roleKo, roleEn]) => { const role = locale === "ko" ? roleKo : roleEn; return <article className="member-card" key={name}><div className="member-card__avatar" aria-hidden="true">{name.slice(0, 2)}</div><h3>{name}</h3><p>{role ?? (locale === "ko" ? "Member" : "Member")} · {locale === "ko" ? "1기" : "1st Generation"}</p></article>; })}</div></section>)}</div></section></main><SiteFooter locale={locale} includeEmail={false} /></>;
+}
