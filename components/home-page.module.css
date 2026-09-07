@@ -1,0 +1,94 @@
+:global(.hero-v2__otter) {
+  position: absolute;
+  z-index: 2;
+  right: clamp(-130px, -3vw, -30px);
+  bottom: -4px;
+  width: min(58vw, 890px);
+  height: min(58vw, 590px);
+  pointer-events: none;
+  filter: drop-shadow(0 26px 40px rgba(0, 0, 0, 0.28));
+  animation: otter-float 7s ease-in-out infinite;
+}
+
+:global(.hero-v2__otter img) {
+  object-fit: contain;
+  object-position: center;
+}
+
+:global(.hero-v2__content),
+:global(.hero-v2__circuit),
+:global(.scroll-cue) {
+  z-index: 3;
+}
+
+:global(.hero-v2__content) {
+  position: relative;
+}
+
+@keyframes otter-float {
+  50% { transform: translate3d(-12px, -14px, 0) rotate(-1deg); }
+}
+
+@media (max-width: 800px) {
+  :global(body.mobile-menu-open) { overflow: hidden; }
+
+  :global(.topbar__inner) {
+    min-height: 70px;
+    gap: 8px;
+  }
+
+  :global(.wordmark) { width: min(47vw, 156px); }
+  :global(.topbar__actions) { gap: 6px; }
+  :global(.icon-button),
+  :global(.locale-button) { width: 38px; height: 38px; }
+
+  :global(.main-nav) {
+    top: 69px;
+    min-height: calc(100svh - 69px);
+    align-content: start;
+    gap: 8px;
+    padding: 22px 16px 32px;
+  }
+
+  :global(.main-nav a) {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+  }
+
+  :global(.hero-v2) { min-height: 700px; }
+
+  :global(.hero-v2__content) {
+    padding-top: 82px;
+    padding-bottom: 292px;
+  }
+
+  :global(.hero-v2__otter) {
+    display: block;
+    right: -78px;
+    bottom: -30px;
+    width: min(92vw, 490px);
+    height: min(92vw, 490px);
+    opacity: .43;
+    filter: drop-shadow(0 18px 28px rgba(0, 0, 0, .22));
+    animation: none;
+  }
+
+  :global(.hero-v2__circuit) {
+    right: -150px;
+    bottom: 122px;
+    opacity: .42;
+  }
+
+  :global(.hero-v2__metrics) { position: relative; z-index: 4; }
+  :global(.scroll-cue) { bottom: 17px; }
+}
+
+:global(.topbar a:focus-visible),
+:global(.topbar button:focus-visible) {
+  outline: 3px solid var(--cyan);
+  outline-offset: 3px;
+}
