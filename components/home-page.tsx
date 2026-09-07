@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { landing, type Locale } from "@/lib/landing-data";
+import { closeOnEscape, nextMenuOpenState } from "@/lib/mobile-nav-state.mjs";
+import "./home-page.module.css";
 
 function useReveal() {
   useEffect(() => {
@@ -20,18 +22,29 @@ export function HomePage({ locale }: { locale: Locale }) {
   const [galleryItem, setGalleryItem] = useState<(typeof copy.gallery)[number] | null>(null); const [query, setQuery] = useState(""); const [noticeType, setNoticeType] = useState("All"); const [faq, setFaq] = useState<number | null>(0);
   useReveal();
   useEffect(() => { document.documentElement.dataset.theme = dark ? "dark" : "light"; }, [dark]);
-  useEffect(() => { const close = (event: KeyboardEvent) => event.key === "Escape" && setGalleryItem(null); window.addEventListener("keydown", close); return () => window.removeEventListener("keydown", close); }, []);
+  useEffect(() => {
+    const close = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setGalleryItem(null);
+      setMenuOpen((isOpen) => closeOnEscape(isOpen, event.key));
+    };
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, []);
+  useEffect(() => {
+    document.body.classList.toggle("mobile-menu-open", menuOpen);
+    return () => document.body.classList.remove("mobile-menu-open");
+  }, [menuOpen]);
   const filteredPrograms = program === "All" ? copy.programs : copy.programs.filter((item) => item.category === program);
   const filteredNotices = useMemo(() => copy.notices.filter((item) => (noticeType === "All" || item.type === noticeType) && `${item.title} ${item.summary}`.toLowerCase().includes(query.toLowerCase())), [copy.notices, noticeType, query]);
   const nav = [["about", copy.nav.about], ["programs", copy.nav.programs], ["gallery", copy.nav.gallery], ["news", copy.nav.news], ["contact", copy.nav.contact]];
   return <div className="site-shell">
     <header className="topbar"><div className="container topbar__inner">
-      <Link className="wordmark" href={`/${locale}`} aria-label="SNU SemiCon home"><Image src="/images/brand/logo-letter-transparent.png" alt="SNU SemiCon" width={240} height={100} priority /></Link>
-      <nav className={`main-nav ${menuOpen ? "is-open" : ""}`} aria-label="Primary navigation">{nav.map(([id, label]) => <a key={id} href={`#${id}`} onClick={() => setMenuOpen(false)}>{label}</a>)}</nav>
-      <div className="topbar__actions"><button className="icon-button" onClick={() => setDark(!dark)} aria-label={dark ? "라이트 모드로 전환" : "다크 모드로 전환"}>{dark ? "☼" : "◐"}</button><Link className="locale-button" href={`/${locale === "ko" ? "en" : "ko"}`}>{locale === "ko" ? "EN" : "KO"}</Link><button className="menu-toggle" onClick={() => setMenuOpen(!menuOpen)} aria-expanded={menuOpen} aria-label="메뉴 열기"><i /><i /></button></div>
+      <Link className="wordmark" href={`/${locale}`} aria-label="SNU SemiCon home"><Image src="/images/brand/logo-letter-alpha.png" alt="SNU SemiCon" width={240} height={100} priority /></Link>
+      <nav id="primary-navigation" className={`main-nav ${menuOpen ? "is-open" : ""}`} aria-label="Primary navigation">{nav.map(([id, label]) => <a key={id} href={`#${id}`} onClick={() => setMenuOpen(false)}>{label}</a>)}</nav>
+      <div className="topbar__actions"><button className="icon-button" onClick={() => setDark(!dark)} aria-label={dark ? "라이트 모드로 전환" : "다크 모드로 전환"}>{dark ? "☼" : "◐"}</button><Link className="locale-button" href={`/${locale === "ko" ? "en" : "ko"}`}>{locale === "ko" ? "EN" : "KO"}</Link><button className="menu-toggle" onClick={() => setMenuOpen(nextMenuOpenState)} aria-expanded={menuOpen} aria-controls="primary-navigation" aria-label={menuOpen ? "메뉴 닫기" : "메뉴 열기"}><i /><i /></button></div>
     </div></header>
     <main>
-      <section className="hero-v2" aria-labelledby="hero-title"><div className="hero-v2__grid" aria-hidden="true" /><div className="hero-v2__orb hero-v2__orb--one" /><div className="hero-v2__orb hero-v2__orb--two" />
+      <section className="hero-v2" aria-labelledby="hero-title"><div className="hero-v2__grid" aria-hidden="true" /><div className="hero-v2__orb hero-v2__orb--one" /><div className="hero-v2__orb hero-v2__orb--two" /><div className="hero-v2__otter" aria-hidden="true"><Image src="/images/brand/otter-hero-alpha.png" alt="" fill priority sizes="(max-width: 800px) 92vw, 58vw" /></div>
         <div className="container hero-v2__content"><p className="kicker">SNU SEMICON · EST. 2025</p><h1 id="hero-title">{copy.hero.title}</h1><p className="hero-v2__lede">{copy.hero.lede}</p><div className="hero-v2__actions"><a className="cta cta--solid" href="#programs">{copy.hero.primary} <span>↗</span></a><a className="cta cta--ghost" href="#about">{copy.hero.secondary}</a></div><div className="hero-v2__metrics" aria-label="SSC highlights">{copy.metrics.map(([number, label]) => <div key={label}><strong>{number}</strong><span>{label}</span></div>)}</div></div><div className="hero-v2__circuit" aria-hidden="true"><span /><span /><span /><span /></div><a className="scroll-cue" href="#about"><span />SCROLL TO EXPLORE</a>
       </section>
       <section id="about" className="section-v2 about-v2"><div className="container section-intro" data-reveal><div><p className="kicker">01 / ABOUT SSC</p><h2>{copy.about.title}</h2></div><p>{copy.about.description}</p></div><div className="container value-grid">{copy.about.values.map((item, index) => <article className="value-card" data-reveal key={item.title} style={{ transitionDelay: `${index * 80}ms` }}><span className="value-card__number">0{index + 1}</span><span className="value-card__icon">{item.icon}</span><h3>{item.title}</h3><p>{item.description}</p><span className="value-card__line" /></article>)}</div></section>
@@ -41,7 +54,7 @@ export function HomePage({ locale }: { locale: Locale }) {
       <section className="section-v2 faq-v2"><div className="container faq-layout"><div data-reveal><p className="kicker">05 / FAQ</p><h2>{copy.faqSection.title}</h2><p>{copy.faqSection.description}</p></div><div className="accordion" data-reveal>{copy.faq.map((item, index) => <article key={item.question} className={faq === index ? "is-open" : ""}><h3><button onClick={() => setFaq(faq === index ? null : index)} aria-expanded={faq === index}>{item.question}<span>+</span></button></h3><div><p>{item.answer}</p></div></article>)}</div></div></section>
       <section id="contact" className="contact-v2"><div className="container contact-v2__inner" data-reveal><p className="kicker">LET&apos;S CONNECT</p><h2>{copy.contact.title}</h2><p>{copy.contact.description}</p><div><a className="cta cta--light" href="mailto:snusemiconductor@gmail.com">{copy.contact.button} <span>↗</span></a><a className="social-link" href="https://www.instagram.com/snu.ssc/" target="_blank" rel="noreferrer">Instagram ↗</a></div></div></section>
     </main>
-    <footer className="footer-v2"><div className="container footer-v2__inner"><Image src="/images/brand/logo-letter-transparent.png" alt="SNU SemiCon" width={220} height={92} /><p>Seoul National University<br />Semiconductor Club</p><span>© {new Date().getFullYear()} SNU SemiCon</span></div></footer>
+    <footer className="footer-v2"><div className="container footer-v2__inner"><Image src="/images/brand/logo-letter-alpha.png" alt="SNU SemiCon" width={220} height={92} /><p>Seoul National University<br />Semiconductor Club</p><span>© {new Date().getFullYear()} SNU SemiCon</span></div></footer>
     {galleryItem && <div className="modal-backdrop" role="presentation" onMouseDown={() => setGalleryItem(null)}><section className="gallery-modal" role="dialog" aria-modal="true" aria-labelledby="gallery-modal-title" onMouseDown={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => setGalleryItem(null)} aria-label="닫기">×</button><div className="gallery-modal__image"><Image src={galleryItem.image} alt={galleryItem.alt} fill sizes="90vw" /></div><div><p className="kicker">{galleryItem.label}</p><h2 id="gallery-modal-title">{galleryItem.title}</h2><p>{galleryItem.detail}</p></div></section></div>}
   </div>;
 }

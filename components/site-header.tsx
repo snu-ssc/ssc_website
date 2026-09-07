@@ -15,7 +15,7 @@ export function SiteHeader({ locale, page }: { locale: Locale; page?: "members" 
 
   return <header className="site-header">
     <div className="container site-header__inner">
-      <Link className="brand" href={`/${locale}`} aria-label="SNU SemiCon home"><Image src="/images/brand/logo-letter-transparent.png" alt="SNU SemiCon" width={184} height={60} priority /></Link>
+      <Link className="brand" href={`/${locale}`} aria-label="SNU SemiCon home"><Image src="/images/brand/logo-letter-alpha.png" alt="SNU SemiCon" width={184} height={60} priority /></Link>
       <button className="menu-button" type="button" aria-expanded={open} aria-controls="main-nav" aria-label={open ? "Close menu" : "Open menu"} onClick={() => setOpen(!open)}><span /><span /><span /></button>
       <div className={`site-header__menu ${open ? "is-open" : ""}`} id="main-nav">
         <nav aria-label="Primary navigation">
