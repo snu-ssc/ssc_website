@@ -4,14 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import type { Locale } from "@/lib/site-data";
-import { content } from "@/lib/site-data";
+import { landing } from "@/lib/landing-data";
 
 export function SiteHeader({ locale, page }: { locale: Locale; page?: "members" }) {
   const [open, setOpen] = useState(false);
-  const c = content[locale];
+  const c = landing[locale];
   const other = locale === "ko" ? "en" : "ko";
   const otherHref = `/${other}${page ? `/${page}` : ""}`;
-  const nav = [["about", c.nav.about], ["focus", c.nav.focus], ["projects", c.nav.projects], ["members", c.nav.members], ["contact", c.nav.contact]] as const;
+  const nav = [["about", c.nav.about], ["programs", c.nav.programs], ["gallery", c.nav.gallery], ["news", c.nav.news], ["members", locale === "ko" ? "멤버" : "Members"], ["contact", c.nav.contact]] as const;
 
   return <header className="site-header">
     <div className="container site-header__inner">
