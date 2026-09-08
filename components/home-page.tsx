@@ -2,10 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { landing, type Locale } from "@/lib/landing-data";
 import { closeOnEscape, nextMenuOpenState } from "@/lib/mobile-nav-state.mjs";
 import { closeOverlayOnEscape } from "@/lib/overlay-state.mjs";
+import { resolveTheme } from "@/lib/theme-preference.mjs";
 import "./home-page.module.css";
 
 function useReveal() {
@@ -19,14 +20,23 @@ function useReveal() {
 
 export function HomePage({ locale }: { locale: Locale }) {
   const copy = landing[locale];
-  const [dark, setDark] = useState(false); const [menuOpen, setMenuOpen] = useState(false); const [program, setProgram] = useState("All");
-  const [galleryItem, setGalleryItem] = useState<(typeof copy.gallery)[number] | null>(null); const [selectedProgram, setSelectedProgram] = useState<(typeof copy.programs)[number] | null>(null); const [query, setQuery] = useState(""); const [noticeType, setNoticeType] = useState("All"); const [faq, setFaq] = useState<number | null>(0);
+  const [dark, setDark] = useState(false); const [themeReady, setThemeReady] = useState(false); const [menuOpen, setMenuOpen] = useState(false); const [program, setProgram] = useState("All");
+  const [galleryItem, setGalleryItem] = useState<(typeof copy.gallery)[number] | null>(null); const [selectedProgram, setSelectedProgram] = useState<(typeof copy.programs)[number] | null>(null); const [selectedNotice, setSelectedNotice] = useState<(typeof copy.notices)[number] | null>(null); const [query, setQuery] = useState(""); const [noticeType, setNoticeType] = useState("All"); const [faq, setFaq] = useState<number | null>(0);
+  const lastFocusedElement = useRef<HTMLElement | null>(null);
   useReveal();
-  useEffect(() => { document.documentElement.dataset.theme = dark ? "dark" : "light"; }, [dark]);
+  useEffect(() => {
+    setDark(resolveTheme(window.localStorage.getItem("ssc-theme"), window.matchMedia("(prefers-color-scheme: dark)").matches) === "dark");
+    setThemeReady(true);
+  }, []);
+  useEffect(() => {
+    document.documentElement.dataset.theme = dark ? "dark" : "light";
+    if (themeReady) window.localStorage.setItem("ssc-theme", dark ? "dark" : "light");
+  }, [dark, themeReady]);
   useEffect(() => {
     const close = (event: KeyboardEvent) => {
       setGalleryItem((item) => closeOverlayOnEscape(item, event.key));
       setSelectedProgram((item) => closeOverlayOnEscape(item, event.key));
+      setSelectedNotice((item) => closeOverlayOnEscape(item, event.key));
       setMenuOpen((isOpen) => closeOnEscape(isOpen, event.key));
     };
     window.addEventListener("keydown", close);
@@ -36,13 +46,36 @@ export function HomePage({ locale }: { locale: Locale }) {
     document.body.classList.toggle("mobile-menu-open", menuOpen);
     return () => document.body.classList.remove("mobile-menu-open");
   }, [menuOpen]);
+  useEffect(() => {
+    const overlayOpen = galleryItem || selectedProgram || selectedNotice;
+    if (overlayOpen) {
+      document.body.classList.add("overlay-open");
+      return () => document.body.classList.remove("overlay-open");
+    }
+    const trigger = lastFocusedElement.current;
+    if (trigger) requestAnimationFrame(() => trigger.focus());
+  }, [galleryItem, selectedProgram, selectedNotice]);
+  useEffect(() => {
+    const handleOverlayTrigger = (event: MouseEvent) => {
+      const target = event.target instanceof Element ? event.target.closest<HTMLElement>(".program-card button, .mosaic__item, .notice-row button") : null;
+      if (!target) return;
+      lastFocusedElement.current = target;
+      if (target.matches(".notice-row button")) {
+        const notices = Array.from(document.querySelectorAll(".notice-row button"));
+        const index = notices.indexOf(target);
+        if (index >= 0) setSelectedNotice(copy.notices[index]);
+      }
+    };
+    document.addEventListener("click", handleOverlayTrigger);
+    return () => document.removeEventListener("click", handleOverlayTrigger);
+  }, [copy.notices]);
   const filteredPrograms = program === "All" ? copy.programs : copy.programs.filter((item) => item.category === program);
   const filteredNotices = useMemo(() => copy.notices.filter((item) => (noticeType === "All" || item.type === noticeType) && `${item.title} ${item.summary}`.toLowerCase().includes(query.toLowerCase())), [copy.notices, noticeType, query]);
-  const nav = [["about", copy.nav.about], ["programs", copy.nav.programs], ["gallery", copy.nav.gallery], ["news", copy.nav.news], ["contact", copy.nav.contact]];
+  const nav = [["about", copy.nav.about], ["programs", copy.nav.programs], ["gallery", copy.nav.gallery], ["news", copy.nav.news], ["members", locale === "ko" ? "멤버" : "Members"], ["contact", copy.nav.contact]];
   return <div className="site-shell">
     <header className="topbar"><div className="container topbar__inner">
       <Link className="wordmark" href={`/${locale}`} aria-label="SNU SemiCon home"><Image src="/images/brand/logo-letter-alpha.png" alt="SNU SemiCon" width={240} height={100} priority /></Link>
-      <nav id="primary-navigation" className={`main-nav ${menuOpen ? "is-open" : ""}`} aria-label="Primary navigation">{nav.map(([id, label]) => <a key={id} href={`#${id}`} onClick={() => setMenuOpen(false)}>{label}</a>)}</nav>
+      <nav id="primary-navigation" className={`main-nav ${menuOpen ? "is-open" : ""}`} aria-label="Primary navigation">{nav.map(([id, label]) => id === "members" ? <Link key={id} href={`/${locale}/members`} onClick={() => setMenuOpen(false)}>{label}</Link> : <a key={id} href={`#${id}`} onClick={() => setMenuOpen(false)}>{label}</a>)}</nav>
       <div className="topbar__actions"><button className="icon-button" onClick={() => setDark(!dark)} aria-label={dark ? "라이트 모드로 전환" : "다크 모드로 전환"}>{dark ? "☼" : "◐"}</button><Link className="locale-button" href={`/${locale === "ko" ? "en" : "ko"}`}>{locale === "ko" ? "EN" : "KO"}</Link><button className="menu-toggle" onClick={() => setMenuOpen(nextMenuOpenState)} aria-expanded={menuOpen} aria-controls="primary-navigation" aria-label={menuOpen ? "메뉴 닫기" : "메뉴 열기"}><i /><i /></button></div>
     </div></header>
     <main>
@@ -59,5 +92,6 @@ export function HomePage({ locale }: { locale: Locale }) {
     <footer className="footer-v2"><div className="container footer-v2__inner"><Image src="/images/brand/logo-letter-alpha.png" alt="SNU SemiCon" width={220} height={92} /><p>Seoul National University<br />Semiconductor Club</p><span>© {new Date().getFullYear()} SNU SemiCon</span></div></footer>
     {galleryItem && <div className="modal-backdrop" role="presentation" onMouseDown={() => setGalleryItem(null)}><section className="gallery-modal" role="dialog" aria-modal="true" aria-labelledby="gallery-modal-title" onMouseDown={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => setGalleryItem(null)} aria-label="닫기">×</button>{galleryItem.image && <div className="gallery-modal__image"><Image src={galleryItem.image} alt={galleryItem.alt} fill sizes="90vw" /></div>}<div><p className="kicker">{galleryItem.label}</p><h2 id="gallery-modal-title">{galleryItem.title}</h2><p>{galleryItem.detail}</p></div></section></div>}
     {selectedProgram && <div className="modal-backdrop" role="presentation" onMouseDown={() => setSelectedProgram(null)}><section className="gallery-modal program-modal" role="dialog" aria-modal="true" aria-labelledby="program-modal-title" onMouseDown={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => setSelectedProgram(null)} aria-label="닫기">×</button><div className="program-modal__visual"><span>{selectedProgram.tag}</span><strong>{selectedProgram.index}</strong></div><div><p className="kicker">{selectedProgram.category}</p><h2 id="program-modal-title">{selectedProgram.title}</h2><p>{selectedProgram.detail}</p></div></section></div>}
+    {selectedNotice && <div className="modal-backdrop" role="presentation" onMouseDown={() => setSelectedNotice(null)}><section className="gallery-modal notice-modal" role="dialog" aria-modal="true" aria-labelledby="notice-modal-title" onMouseDown={(event) => event.stopPropagation()}><button className="modal-close" autoFocus onClick={() => setSelectedNotice(null)} aria-label="Close">×</button><div><p className="kicker">{selectedNotice.type} / {selectedNotice.month} {selectedNotice.date}</p><h2 id="notice-modal-title">{selectedNotice.title}</h2><p>{selectedNotice.summary}</p><a className="notice-modal__contact" href="mailto:snusemiconductor@gmail.com">Contact SSC</a></div></section></div>}
   </div>;
 }
