@@ -42,7 +42,7 @@ const programs: Record<Locale, readonly ProgramDetail[]> = {
       index: "01",
       tag: "FUNDAMENTALS",
       title: "반도체 스터디",
-      summary: "회로·소자·공정을 함께 깊이 있게 배우고 토론하는 정규 스터디",
+      summary: "금요일 16:00–18:00과 토요일 11:00–13:00 모두 Circuit Design과 Process & Device가 동시에 진행되는 정규 스터디",
       overview: "기초 이론을 실제 사례와 연결하고, 서로의 질문을 통해 반도체 기술의 공통 언어를 만들어 갑니다.",
       sections: [
         {
@@ -132,7 +132,7 @@ const programs: Record<Locale, readonly ProgramDetail[]> = {
       index: "01",
       tag: "FUNDAMENTALS",
       title: "Semiconductor Study",
-      summary: "A recurring study group for devices, circuits, and processes.",
+      summary: "Circuit Design and Process & Device run in parallel Friday 16:00–18:00 and Saturday 11:00–13:00.",
       overview: "Connect fundamental theory with real examples and build a shared technical language through thoughtful discussion.",
       sections: [
         {
