@@ -20,7 +20,7 @@ export function LanguageGate() {
   return (
     <main className="language-gate">
       <section className="language-gate__content" aria-labelledby="language-title">
-        <Image src="/images/brand/logo-letter-alpha.png" alt="SNU SemiCon" width={360} height={108} priority />
+        <Image src="/images/brand/logo-letter-alpha.png" alt="SNU SemiCon" width={360} height={108} />
         <p className="eyebrow">SNU Semiconductor Club</p>
         <h1 id="language-title">언어를 선택해주세요</h1>
         <p className="language-gate__english">Please select your language</p>

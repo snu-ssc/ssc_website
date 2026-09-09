@@ -1,4 +1,4 @@
-import type { Locale } from "./landing-data";
+import type { Locale } from "./site-data";
 
 export const programSlugs = [
   "study",

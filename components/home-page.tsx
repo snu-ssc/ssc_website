@@ -7,9 +7,11 @@ import { landing, type Locale } from "@/lib/landing-data";
 import { closeOnEscape, nextMenuOpenState } from "@/lib/mobile-nav-state.mjs";
 import { closeOverlayOnEscape } from "@/lib/overlay-state.mjs";
 import { filterPrograms } from "@/lib/program-filter.mjs";
-import { getPrograms } from "@/lib/program-data";
+import { getProgram, getPrograms } from "@/lib/program-data";
+import { resolveNotice } from "@/lib/notice-resolver.mjs";
 import { observeRevealNodes } from "@/lib/reveal-observer.mjs";
 import { resolveTheme } from "@/lib/theme-preference.mjs";
+import { getHomeUiCopy } from "@/lib/home-ui-copy.mjs";
 import "./home-page.module.css";
 
 type Theme = "dark" | "light";
@@ -72,6 +74,7 @@ function useReveal() {
 
 export function HomePage({ locale }: { locale: Locale }) {
   const copy = landing[locale];
+  const ui = getHomeUiCopy(locale);
   const programs = getPrograms(locale);
   const storedTheme = useSyncExternalStore(
     subscribeToThemePreference,
@@ -121,12 +124,16 @@ export function HomePage({ locale }: { locale: Locale }) {
   }, [galleryItem]);
 
   const filteredPrograms = filterPrograms(programs, program) as typeof programs;
+  const notices = useMemo(
+    () => copy.notices.map((notice) => resolveNotice(notice, locale, getProgram)),
+    [copy.notices, locale],
+  );
   const filteredNotices = useMemo(
-    () => copy.notices.filter(
+    () => notices.filter(
       (item) => (noticeType === "All" || item.type === noticeType)
         && `${item.title} ${item.summary}`.toLowerCase().includes(query.toLowerCase()),
     ),
-    [copy.notices, noticeType, query],
+    [notices, noticeType, query],
   );
   const nav = [
     ["about", copy.nav.about],
@@ -141,10 +148,10 @@ export function HomePage({ locale }: { locale: Locale }) {
     <div className="site-shell">
       <header className="topbar">
         <div className="container topbar__inner">
-          <Link className="wordmark" href={`/${locale}`} aria-label="SNU SemiCon home">
+          <Link className="wordmark" href={`/${locale}`} aria-label={ui.home}>
             <Image src="/images/brand/logo-letter-alpha.png" alt="SNU SemiCon" width={240} height={100} />
           </Link>
-          <nav id="primary-navigation" className={`main-nav ${menuOpen ? "is-open" : ""}`} aria-label="Primary navigation">
+          <nav id="primary-navigation" className={`main-nav ${menuOpen ? "is-open" : ""}`} aria-label={ui.primaryNavigation}>
             {nav.map(([id, label]) => id === "members" ? (
               <Link key={id} href={`/${locale}/members`} onClick={() => setMenuOpen(false)}>{label}</Link>
             ) : (
@@ -155,7 +162,7 @@ export function HomePage({ locale }: { locale: Locale }) {
             <button
               className="icon-button"
               onClick={() => setSelectedTheme(dark ? "light" : "dark")}
-              aria-label={dark ? "라이트 모드로 전환" : "다크 모드로 전환"}
+              aria-label={dark ? ui.switchToLight : ui.switchToDark}
             >
               {dark ? "☼" : "◐"}
             </button>
@@ -165,7 +172,7 @@ export function HomePage({ locale }: { locale: Locale }) {
               onClick={() => setMenuOpen(nextMenuOpenState)}
               aria-expanded={menuOpen}
               aria-controls="primary-navigation"
-              aria-label={menuOpen ? "메뉴 닫기" : "메뉴 열기"}
+              aria-label={menuOpen ? ui.closeMenu : ui.openMenu}
             >
               <i /><i />
             </button>
@@ -196,7 +203,7 @@ export function HomePage({ locale }: { locale: Locale }) {
               <a className="cta cta--solid" href="#programs">{copy.hero.primary} <span>↗</span></a>
               <a className="cta cta--ghost" href="#about">{copy.hero.secondary}</a>
             </div>
-            <div className="hero-v2__metrics" aria-label="SSC highlights">
+            <div className="hero-v2__metrics" aria-label={ui.highlights}>
               {copy.metrics.map(([number, label]) => <div key={label}><strong>{number}</strong><span>{label}</span></div>)}
             </div>
           </div>
@@ -231,7 +238,7 @@ export function HomePage({ locale }: { locale: Locale }) {
             <p>{copy.programSection.description}</p>
           </div>
           <div className="container">
-            <div className="filter-row" aria-label="프로그램 필터">
+            <div className="filter-row" aria-label={ui.programFilter}>
               {copy.categories.map((category) => (
                 <button
                   key={category}
@@ -275,7 +282,7 @@ export function HomePage({ locale }: { locale: Locale }) {
                   lastFocusedElement.current = event.currentTarget;
                   setGalleryItem(item);
                 }}
-                aria-label={`${item.title} 상세 보기`}
+                aria-label={`${ui.galleryDetails} ${item.title}`}
               >
                 {item.image ? (
                   <Image src={item.image} alt={item.alt} fill sizes="(max-width: 700px) 100vw, 50vw" />
@@ -296,7 +303,7 @@ export function HomePage({ locale }: { locale: Locale }) {
           <div className="container news-controls">
             <label className="search-field">
               <span>⌕</span>
-              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={copy.searchPlaceholder} aria-label="공지 검색" />
+              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={copy.searchPlaceholder} aria-label={ui.searchNews} />
             </label>
             <div className="notice-filter">
               {copy.noticeTypes.map((type) => (
@@ -321,7 +328,7 @@ export function HomePage({ locale }: { locale: Locale }) {
               }
               return <Link key={item.title} className="notice-row" data-reveal href={item.href}>{content}</Link>;
             })}
-            {filteredNotices.length === 0 && <p className="empty-state">검색 결과가 없습니다.</p>}
+            {filteredNotices.length === 0 && <p className="empty-state">{ui.emptyState}</p>}
           </div>
         </section>
 
@@ -363,7 +370,7 @@ export function HomePage({ locale }: { locale: Locale }) {
       {galleryItem && (
         <div className="modal-backdrop" role="presentation" onMouseDown={() => setGalleryItem(null)}>
           <section className="gallery-modal" role="dialog" aria-modal="true" aria-labelledby="gallery-modal-title" onMouseDown={(event) => event.stopPropagation()}>
-            <button className="modal-close" onClick={() => setGalleryItem(null)} aria-label="닫기">×</button>
+            <button className="modal-close" onClick={() => setGalleryItem(null)} aria-label={ui.closeModal}>×</button>
             {galleryItem.image && <div className="gallery-modal__image"><Image src={galleryItem.image} alt={galleryItem.alt} fill sizes="90vw" /></div>}
             <div><p className="kicker">{galleryItem.label}</p><h2 id="gallery-modal-title">{galleryItem.title}</h2><p>{galleryItem.detail}</p></div>
           </section>
