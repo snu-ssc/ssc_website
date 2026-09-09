@@ -9,7 +9,7 @@ export function MembersPage({ locale }: { locale: Locale }) {
     ? { eyebrow: "People of SSC", title: "함께 배우고, 만들고,\n연결하는 사람들", lead: "서로 다른 전공과 시선이 만나 SSC의 다음 회로를 만듭니다.", count: "Directory", roster: "Member Roster", past: "SSC의 시작을 함께해 준 소중한 구성원들" }
     : { eyebrow: "People of SSC", title: "The people who learn,\nbuild, and connect together.", lead: "Different disciplines and perspectives come together to shape SSC's next circuit.", count: "Directory", roster: "Member Roster", past: "The people who helped shape SSC's beginning." };
 
-  return <><SiteHeader locale={locale} page="members" /><main className="members-page">
+  return <><SiteHeader locale={locale} path="/members" /><main className="members-page">
     <section className="members-hero"><div className="container members-hero__grid">
       <div><p className="eyebrow">{copy.eyebrow}</p><h1>{copy.title}</h1><p>{copy.lead}</p></div>
       <div className="directory-count" aria-label={`${totalMembers} ${copy.count}`}><strong>{String(totalMembers).padStart(2, "0")}</strong><span>{copy.count}</span><i aria-hidden="true" /></div>
