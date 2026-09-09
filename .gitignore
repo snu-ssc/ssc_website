@@ -43,3 +43,4 @@ next-env.d.ts
 # local Codex/VS Code setup and an unused image-generation draft
 .vscode/
 /public/images/brand/logo-letter-clean.png
+/.worktrees/
